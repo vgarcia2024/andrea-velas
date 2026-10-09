@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lumbre · Velas artesanales</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fbfaf7;--paper:#fff;--ink:#2e312c;--mute:#7b7f76;--sage:#7f8f7a;--sage-d:#5f6f5b;--blush:#ecdfdb;--line:#e6e2da;--r:14px}
+*{box-sizing:border-box;margin:0}
+body{font:300 16px/1.6 Jost,sans-serif;background:var(--bg);color:var(--ink)}
+h1,h2,h3,.logo{font-family:'Cormorant Garamond',serif;font-weight:400;line-height:1.1}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--sage);outline-offset:2px}
+.hidden{display:none!important}
+header{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:20px;padding:14px 5vw;background:#fbfaf7ee;backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.logo{font-size:28px;margin-right:auto;display:flex;align-items:center;gap:8px}
+.logo svg{width:26px;height:26px}
+.btn{border:1px solid var(--ink);background:none;color:var(--ink);padding:9px 20px;border-radius:99px;transition:.2s}
+.btn:hover{background:var(--ink);color:#fff}
+.btn.fill{background:var(--sage-d);border-color:var(--sage-d);color:#fff}.btn.fill:hover{background:var(--ink);border-color:var(--ink)}
+.btn.sm{padding:5px 14px;font-size:14px}
+.link{background:none;border:0;color:var(--ink);padding:6px 2px}
+.link:hover{color:var(--sage-d)}
+.badge{background:var(--sage-d);color:#fff;border-radius:99px;font-size:12px;padding:0 7px;margin-left:4px}
+.hero{position:relative;overflow:hidden;display:grid;grid-template-columns:1.1fr .9fr;align-items:center;gap:30px;padding:9vh 5vw;min-height:68vh;background:linear-gradient(120deg,var(--blush) 0,#f4ece9 45%,var(--bg) 100%)}
+.hero h1{font-size:clamp(44px,7vw,92px);max-width:11ch}
+.hero h1 em{font-style:italic;color:var(--sage-d)}
+.hero p{margin:22px 0 30px;max-width:42ch;color:var(--mute)}
+.hero .art{justify-self:center;width:min(380px,80%);color:var(--sage-d);opacity:.85}
+section.wrap{padding:70px 5vw}
+.head{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:34px;flex-wrap:wrap}
+.head h2{font-size:clamp(32px,4vw,48px)}
+.head p{color:var(--mute)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:26px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;cursor:pointer;text-align:left;padding:0;transition:.25s}
+.card:hover{transform:translateY(-4px);border-color:var(--sage)}
+.ph{aspect-ratio:4/5;background:var(--blush);display:grid;place-items:center;position:relative;overflow:hidden}
+.ph img{width:100%;height:100%;object-fit:cover}
+.ph svg{width:46%;color:#fff}
+.lock{position:absolute;top:12px;right:12px;background:#fffc;border-radius:99px;padding:4px 10px;font-size:12px}
+.card .in{padding:14px 16px 18px}
+.card h3{font-size:24px}
+.stock{font-size:14px;color:var(--sage-d)}.stock.out{color:#a4605a}
+.empty{grid-column:1/-1;text-align:center;color:var(--mute);padding:50px 0}
+.overlay{position:fixed;inset:0;background:#2e312c66;z-index:40;display:grid;place-items:center;padding:20px}
+.modal{background:var(--paper);border-radius:var(--r);max-width:760px;width:100%;max-height:92vh;overflow:auto;display:grid;grid-template-columns:1fr 1fr;position:relative}
+.modal .ph{aspect-ratio:auto;min-height:300px}
+.modal .body{padding:34px 30px;display:flex;flex-direction:column;gap:14px}
+.modal h2{font-size:38px}
+.price{font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--sage-d)}
+.x{position:absolute;top:10px;right:14px;background:#fffd;border:0;border-radius:50%;width:34px;height:34px;font-size:20px;z-index:2}
+.qty{display:flex;align-items:center;gap:10px}
+.qty button{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:none}
+.locked{text-align:center;padding:50px 30px;grid-column:1/-1}
+.locked svg{width:44px;color:var(--sage)}
+.locked h2{margin:10px 0}
+.locked p{color:var(--mute);margin-bottom:22px}
+aside.cart{position:fixed;top:0;right:0;bottom:0;width:min(420px,100%);background:var(--paper);z-index:50;padding:26px;display:flex;flex-direction:column;gap:14px;box-shadow:-10px 0 40px #0002;transform:translateX(100%);transition:.3s}
+aside.cart.open{transform:none}
+aside.cart h2{font-size:34px}
+.items{flex:1;overflow:auto;display:flex;flex-direction:column;gap:14px}
+.item{display:flex;gap:12px;align-items:center;border-bottom:1px solid var(--line);padding-bottom:12px}
+.item .t{flex:1}.item img,.item .th{width:56px;height:56px;border-radius:10px;object-fit:cover;background:var(--blush)}
+.note{font-size:14px;color:var(--mute)}
+.tot{display:flex;justify-content:space-between;font-size:20px}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 24px;border-radius:99px;z-index:90;font-size:15px}
+/* panel */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:30px}
+.stat{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.stat b{display:block;font:400 38px 'Cormorant Garamond',serif;color:var(--sage-d)}
+.panel{display:grid;grid-template-columns:320px 1fr;gap:30px;align-items:start}
+form.f{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:22px;display:flex;flex-direction:column;gap:12px;position:sticky;top:80px}
+input,textarea{font:inherit;width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+label{font-size:14px;color:var(--mute)}
+.tbl{overflow:auto;background:var(--paper);border:1px solid var(--line);border-radius:var(--r)}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-weight:500;color:var(--mute);font-size:14px}
+td img{width:44px;height:44px;border-radius:8px;object-fit:cover;display:block}
+.pill{background:var(--blush);border-radius:99px;padding:2px 10px;font-size:13px}
+.order{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;margin-bottom:12px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:center}
+.tabs{display:flex;gap:18px;margin:34px 0 18px;font-size:18px}
+.tabs button{border:0;background:none;border-bottom:2px solid transparent;padding:4px 0;color:var(--mute)}
+.tabs .on{color:var(--ink);border-color:var(--sage)}
+footer{text-align:center;padding:50px 5vw;color:var(--mute);border-top:1px solid var(--line)}
+@media(max-width:800px){.hero,.modal,.panel{grid-template-columns:1fr}.hero .art{display:none}form.f{position:static}header{gap:10px;padding:12px 4vw}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+<symbol id="flor" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+<g transform="translate(50 42)"><ellipse cy="-20" rx="9" ry="17"/><ellipse cy="-20" rx="9" ry="17" transform="rotate(72)"/><ellipse cy="-20" rx="9" ry="17" transform="rotate(144)"/><ellipse cy="-20" rx="9" ry="17" transform="rotate(216)"/><ellipse cy="-20" rx="9" ry="17" transform="rotate(288)"/><circle r="4"/></g>
+<path d="M50 62C50 78 48 90 44 98M49 80c-8-2-14-8-15-15 8 0 14 5 15 15z"/></symbol>
+<symbol id="candado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></symbol>
+</svg>
+
+<header>
+  <a class="logo" href="#" onclick="go('shop');return false"><svg><use href="#flor"/></svg>Lumbre</a>
+  <button class="link hidden" id="navAdmin" onclick="go('admin')">Panel</button>
+  <button class="link" onclick="toggleCart(true)">Carrito<span class="badge" id="cnt">0</span></button>
+  <button class="btn sm" id="authBtn" onclick="auth()">Ingresar con Google</button>
+</header>
+
+<div id="shop">
+  <div class="hero">
+    <div>
+      <h1>Velas hechas a mano, con <em>calma</em></h1>
+      <p>Cera de soja y aromas suaves, vertidas en pequeños lotes. Elegí la tuya entre lo que hay disponible hoy.</p>
+      <button class="btn fill" onclick="document.getElementById('stock').scrollIntoView({behavior:'smooth'})">Ver velas disponibles</button>
+    </div>
+    <svg class="art" viewBox="0 0 100 100"><use href="#flor"/></svg>
+  </div>
+  <section class="wrap" id="stock">
+    <div class="head"><div><h2>Disponibles ahora</h2><p>Cada vela se vende hasta agotar stock.</p></div></div>
+    <div class="grid" id="grid"></div>
+  </section>
+  <footer>Lumbre · Velas artesanales · Hecho con cariño</footer>
+</div>
+
+<div id="admin" class="hidden">
+ <section class="wrap">
+  <div class="head"><div><h2>Panel de administración</h2><p>Stock, reservas y pedidos.</p></div></div>
+  <div class="stats" id="stats"></div>
+  <div class="tabs"><button class="on" id="tS" onclick="tab('S')">Stock</button><button id="tO" onclick="tab('O')">Pedidos</button></div>
+  <div id="pS" class="panel">
+    <form class="f" id="form">
+      <h3 id="ftitle">Nueva vela</h3>
+      <input type="hidden" id="fid">
+      <div><label>Nombre</label><input id="fname" required></div>
+      <div><label>Descripción (aroma, duración, tamaño)</label><textarea id="fdesc" rows="3"></textarea></div>
+      <div><label>Precio</label><input id="fprice" type="number" min="0" step="0.01" required></div>
+      <div><label>Stock total</label><input id="fstock" type="number" min="0" required></div>
+      <div><label>Imagen</label><input id="ffile" type="file" accept="image/*"></div>
+      <button class="btn fill" type="submit">Guardar vela</button>
+      <button class="btn" type="button" onclick="resetForm()">Limpiar</button>
+    </form>
+    <div class="tbl"><table><thead><tr><th></th><th>Vela</th><th>Precio</th><th>Stock</th><th>Reservado</th><th>Libre</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
+  </div>
+  <div id="pO" class="hidden"></div>
+ </section>
+</div>
+
+<div class="overlay hidden" id="ov" onclick="if(event.target===this)closeModal()"><div class="modal" id="modal"></div></div>
+
+<aside class="cart" id="cart">
+  <h2>Tu carrito</h2>
+  <div class="items" id="items"></div>
+  <p class="note">Al reservar, las velas se apartan para vos hasta que se confirme el pago.</p>
+  <div class="tot"><span>Total</span><b id="total">$0</b></div>
+  <button class="btn fill" onclick="reserve()">Reservar y pagar</button>
+  <button class="btn" onclick="toggleCart(false)">Seguir mirando</button>
+</aside>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+/* ============ CONFIGURACIÓN ============
+   Pegá acá los datos de tu proyecto (Supabase > Project Settings > API).
+   Si queda vacío, la tienda corre en MODO DEMO (datos locales, sin Supabase). */
+const CFG={url:'',key:'',bucket:'velas'};
+const demo=!CFG.url;
+const sb=demo?null:supabase.createClient(CFG.url,CFG.key);
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=n=>'$'+Number(n).toLocaleString('es-AR');
+const S={user:null,admin:false,products:[],cart:JSON.parse(localStorage.getItem('cart')||'[]'),view:'shop'};
+
+/* ============ CAPA DE DATOS ============ */
+const L=(k,d)=>JSON.parse(localStorage.getItem(k)||'null')??d, W=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+const toURL=f=>new Promise(r=>{const x=new FileReader();x.onload=()=>r(x.result);x.readAsDataURL(f)});
+const seed=[{id:'1',name:'Lavanda y bruma',description:'Lavanda con notas de té blanco. Cera de soja, 40 hs.',price:9500,stock:6},{id:'2',name:'Jazmín de noche',description:'Floral suave y cremoso. 180 g.',price:11000,stock:3},{id:'3',name:'Cedro y peonía',description:'Madera clara con flores frescas. 220 g.',price:12500,stock:0}];
+
+const api=demo?{
+  async session(){const u=L('dv_u');return u?{id:u.id,email:u.email,admin:u.admin}:null},
+  async login(){const a=confirm('MODO DEMO\nAceptar = entrar como ADMIN\nCancelar = entrar como USUARIO');W('dv_u',{id:'demo',email:'demo@gmail.com',admin:a})},
+  async logout(){localStorage.removeItem('dv_u')},
+  async products(){const used={};L('dv_o',[]).filter(o=>o.status=='pending').forEach(o=>o.order_items.forEach(i=>used[i.product_id]=(used[i.product_id]||0)+i.qty));
+    return L('dv_p',seed).map(p=>({...p,available:p.stock-(used[p.id]||0)}))},
+  async save(p,file){if(file)p.image_url=await toURL(file);const a=L('dv_p',seed);p.id?Object.assign(a.find(x=>x.id==p.id),p):a.push({...p,id:String(Date.now())});W('dv_p',a)},
+  async del(id){W('dv_p',L('dv_p',seed).filter(p=>p.id!=id))},
+  async order(items){const ps=await this.products(),o=L('dv_o',[]);
+    items.forEach(i=>{if(ps.find(p=>p.id==i.id).available<i.qty)throw Error('Stock insuficiente')});
+    o.push({id:String(Date.now()),status:'pending',created_at:new Date().toISOString(),profiles:{email:S.user.email},order_items:items.map(i=>({product_id:i.id,qty:i.qty,products:{name:ps.find(p=>p.id==i.id).name}}))});W('dv_o',o)},
+  async orders(){return L('dv_o',[]).reverse()},
+  async setOrder(id,st){const o=L('dv_o',[]),x=o.find(v=>v.id==id);
+    if(st=='paid'){const p=L('dv_p',seed);x.order_items.forEach(i=>p.find(q=>q.id==i.product_id).stock-=i.qty);W('dv_p',p)}
+    x.status=st;W('dv_o',o)}
+}:{
+  async session(){const{data:{session}}=await sb.auth.getSession();if(!session)return null;
+    const{data}=await sb.from('profiles').select('role').eq('id',session.user.id).single();
+    return{id:session.user.id,email:session.user.email,admin:data?.role=='admin'}},
+  async login(){await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}})},
+  async logout(){await sb.auth.signOut()},
+  async products(){const{data,error}=await sb.from('products_available').select('*').order('created_at',{ascending:false});if(error)throw error;return data},
+  async save(p,file){if(file){const path=Date.now()+'-'+file.name.replace(/[^\w.-]/g,'_');
+      const u=await sb.storage.from(CFG.bucket).upload(path,file);if(u.error)throw u.error;
+      p.image_url=sb.storage.from(CFG.bucket).getPublicUrl(path).data.publicUrl}
+    const r=p.id?await sb.from('products').update(p).eq('id',p.id):await sb.from('products').insert(p);if(r.error)throw r.error},
+  async del(id){const r=await sb.from('products').delete().eq('id',id);if(r.error)throw r.error},
+  async order(items){const r=await sb.rpc('create_order',{items:items.map(i=>({product_id:i.id,qty:i.qty}))});if(r.error)throw r.error},
+  async orders(){const{data,error}=await sb.from('orders').select('id,status,created_at,profiles(email),order_items(qty,product_id,products(name))').order('created_at',{ascending:false});if(error)throw error;return data},
+  async setOrder(id,st){const r=await sb.rpc(st=='paid'?'confirm_order':'cancel_order',{oid:id});if(r.error)throw r.error}
+};
+
+/* ============ UI ============ */
+function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.append(t);setTimeout(()=>t.remove(),3200)}
+const run=async f=>{try{await f()}catch(e){toast(e.message||'Ocurrió un error')}};
+
+async function init(){
+  if(demo)toast('Modo demo: datos guardados solo en este navegador');
+  S.user=await api.session();S.admin=!!S.user?.admin;
+  if(!demo)sb.auth.onAuthStateChange(()=>{});
+  drawAuth();await load();
+}
+function drawAuth(){
+  $('#authBtn').textContent=S.user?'Salir':'Ingresar con Google';
+  $('#navAdmin').classList.toggle('hidden',!S.admin);
+  if(!S.admin&&S.view=='admin')go('shop');
+}
+async function auth(){await run(async()=>{if(S.user){await api.logout();S.user=null;S.admin=false;drawAuth();renderGrid()}else{await api.login();if(demo)init()}})}
+function go(v){S.view=v;$('#shop').classList.toggle('hidden',v!='shop');$('#admin').classList.toggle('hidden',v!='admin');scrollTo(0,0);if(v=='admin')loadAdmin()}
+async function load(){await run(async()=>{S.products=await api.products();renderGrid();renderCart()})}
+
+function ph(p){return p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.name)}">`:'<svg><use href="#flor"/></svg>'}
+function renderGrid(){
+  $('#grid').innerHTML=S.products.length?S.products.map(p=>`
+  <button class="card" onclick="openModal('${p.id}')"><div class="ph">${ph(p)}${S.user?'':'<span class="lock">Bloqueado</span>'}</div>
+  <div class="in"><h3>${esc(p.name)}</h3><span class="stock ${p.available<1?'out':''}">${p.available>0?p.available+' disponibles':'Agotada'}</span></div></button>`).join(''):'<p class="empty">Pronto vamos a sumar nuevas velas.</p>';
+}
+function openModal(id){
+  const p=S.products.find(x=>x.id==id),m=$('#modal');
+  m.innerHTML=`<button class="x" onclick="closeModal()" aria-label="Cerrar">×</button>`+(!S.user?
+  `<div class="locked"><svg><use href="#candado"/></svg><h2>Bloqueado</h2><p>Iniciá sesión para ver más información de esta vela.</p><button class="btn fill" onclick="closeModal();auth()">Ingresar con Google</button></div>`:
+  `<div class="ph">${ph(p)}</div><div class="body"><h2>${esc(p.name)}</h2><div class="price">${money(p.price)}</div><p>${esc(p.description)}</p>
+   <span class="stock ${p.available<1?'out':''}">${p.available>0?p.available+' disponibles':'Agotada'}</span>
+   ${p.available>0?`<div class="qty"><button onclick="q(-1)">−</button><b id="qv">1</b><button onclick="q(1,${p.available})">+</button></div><button class="btn fill" onclick="addCart('${p.id}')">Agregar al carrito</button>`:''}</div>`);
+  $('#ov').classList.remove('hidden');
+}
+const closeModal=()=>$('#ov').classList.add('hidden');
+function q(d,max){const e=$('#qv');e.textContent=Math.max(1,Math.min(max||99,+e.textContent+d))}
+function addCart(id){
+  const p=S.products.find(x=>x.id==id),n=+$('#qv').textContent,c=S.cart.find(i=>i.id==id);
+  const tot=(c?c.qty:0)+n; if(tot>p.available)return toast('No hay más stock disponible');
+  c?c.qty=tot:S.cart.push({id,qty:n});saveCart();closeModal();toggleCart(true)
+}
+function saveCart(){localStorage.setItem('cart',JSON.stringify(S.cart));renderCart()}
+function toggleCart(o){$('#cart').classList.toggle('open',o)}
+function renderCart(){
+  S.cart=S.cart.filter(c=>S.products.some(p=>p.id==c.id));
+  $('#cnt').textContent=S.cart.reduce((a,c)=>a+c.qty,0);
+  let t=0;
+  $('#items').innerHTML=S.cart.length?S.cart.map(c=>{const p=S.products.find(x=>x.id==c.id);t+=p.price*c.qty;
+    return `<div class="item">${p.image_url?`<img src="${esc(p.image_url)}" alt="">`:'<div class="th"></div>'}<div class="t"><b>${esc(p.name)}</b><div class="note">${money(p.price)}</div></div>
+    <div class="qty"><button onclick="cq('${p.id}',-1)">−</button>${c.qty}<button onclick="cq('${p.id}',1)">+</button></div></div>`}).join(''):'<p class="note">Todavía no agregaste velas.</p>';
+  $('#total').textContent=money(t);
+}
+function cq(id,d){const c=S.cart.find(i=>i.id==id),p=S.products.find(x=>x.id==id);c.qty+=d;if(c.qty>p.available)c.qty=p.available;if(c.qty<1)S.cart=S.cart.filter(i=>i!=c);saveCart()}
+async function reserve(){
+  if(!S.cart.length)return toast('El carrito está vacío');
+  if(!S.user){toggleCart(false);return auth()}
+  await run(async()=>{await api.order(S.cart);S.cart=[];saveCart();toggleCart(false);await load();toast('Reserva creada. Tus velas quedan apartadas hasta confirmar el pago.')});
+}
+
+/* ============ PANEL ADMIN ============ */
+function tab(t){$('#pS').classList.toggle('hidden',t!='S');$('#pO').classList.toggle('hidden',t!='O');$('#tS').classList.toggle('on',t=='S');$('#tO').classList.toggle('on',t=='O')}
+async function loadAdmin(){await run(async()=>{
+  await load();const ord=await api.orders(),P=S.products,pend=ord.filter(o=>o.status=='pending');
+  const sum=k=>P.reduce((a,p)=>a+p[k],0);
+  $('#stats').innerHTML=[['Velas',P.length],['Stock total',sum('stock')],['Reservado',sum('stock')-sum('available')],['Pedidos por confirmar',pend.length]].map(s=>`<div class="stat"><b>${s[1]}</b>${s[0]}</div>`).join('');
+  $('#rows').innerHTML=P.map(p=>`<tr><td>${p.image_url?`<img src="${esc(p.image_url)}" alt="">`:''}</td><td>${esc(p.name)}</td><td>${money(p.price)}</td><td>${p.stock}</td><td>${p.stock-p.available}</td><td><span class="pill">${p.available}</span></td>
+   <td><button class="btn sm" onclick="edit('${p.id}')">Editar</button> <button class="btn sm" onclick="del('${p.id}')">Eliminar</button></td></tr>`).join('')||'<tr><td colspan="7">Todavía no cargaste velas.</td></tr>';
+  $('#pO').innerHTML=ord.map(o=>`<div class="order"><div><b>${esc(o.profiles?.email||'Cliente')}</b><div class="note">${new Date(o.created_at).toLocaleString('es-AR')} · ${o.order_items.map(i=>i.qty+'× '+esc(i.products?.name)).join(', ')}</div></div>
+   ${o.status=='pending'?`<div><button class="btn sm fill" onclick="setO('${o.id}','paid')">Confirmar pago</button> <button class="btn sm" onclick="setO('${o.id}','cancelled')">Cancelar y liberar</button></div>`:`<span class="pill">${o.status=='paid'?'Pagado':'Cancelado'}</span>`}</div>`).join('')||'<p class="note">Todavía no hay pedidos.</p>';
+})}
+async function setO(id,st){await run(async()=>{if(st=='cancelled'&&!confirm('¿Cancelar y liberar el stock reservado?'))return;await api.setOrder(id,st);toast(st=='paid'?'Pago confirmado: stock descontado':'Reserva liberada');loadAdmin()})}
+function resetForm(){$('#form').reset();$('#fid').value='';$('#ftitle').textContent='Nueva vela'}
+function edit(id){const p=S.products.find(x=>x.id==id);$('#fid').value=id;$('#fname').value=p.name;$('#fdesc').value=p.description||'';$('#fprice').value=p.price;$('#fstock').value=p.stock;$('#ftitle').textContent='Editar vela';scrollTo(0,0)}
+async function del(id){if(confirm('¿Eliminar esta vela?'))await run(async()=>{await api.del(id);loadAdmin()})}
+$('#form').addEventListener('submit',e=>{e.preventDefault();run(async()=>{
+  const p={name:$('#fname').value.trim(),description:$('#fdesc').value.trim(),price:+$('#fprice').value,stock:+$('#fstock').value};
+  if($('#fid').value)p.id=$('#fid').value;
+  await api.save(p,$('#ffile').files[0]);resetForm();toast('Vela guardada');loadAdmin()})});
+addEventListener('keydown',e=>{if(e.key=='Escape'){closeModal();toggleCart(false)}});
+init();
+</script>
+</body>
+</html>
