@@ -158,7 +158,7 @@ footer{text-align:center;padding:50px 5vw;color:var(--mute);border-top:1px solid
 /* ============ CONFIGURACIÓN ============
    Pegá acá los datos de tu proyecto (Supabase > Project Settings > API).
    Si queda vacío, la tienda corre en MODO DEMO (datos locales, sin Supabase). */
-const CFG={url:'',key:'',bucket:'velas'};
+const CFG={url:'https://cufzvobltudsibruhcrg.supabase.co',key:'sb_publishable_svLLvJKofEjIUiDvq8ef6Q_OTos7HrC',bucket:'velas'};
 const demo=!CFG.url;
 const sb=demo?null:supabase.createClient(CFG.url,CFG.key);
 
