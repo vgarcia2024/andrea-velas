@@ -249,9 +249,10 @@ td img{width:44px;height:44px;border-radius:10px;object-fit:cover;display:block}
 <aside class="cart" id="cart">
   <h2>Tu carrito</h2>
   <div class="items" id="items"></div>
-  <p class="note">Al reservar, las velas se apartan para vos hasta que se confirme el pago.</p>
+  <p class="note">Al reservar, tus velas quedan apartadas y se arma un mensaje con tu pedido para coordinar el pago por WhatsApp.</p>
   <div class="tot"><span>Total</span><b id="total">$0</b></div>
-  <button class="btn fill" onclick="reserve()">Reservar y pagar</button>
+  <button class="btn fill" onclick="reserve('wa')">Reservar y enviar por WhatsApp</button>
+  <button class="btn" onclick="reserve('copy')">Reservar y copiar mensaje</button>
   <button class="btn" onclick="toggleCart(false)">Seguir mirando</button>
 </aside>
 
@@ -260,7 +261,9 @@ td img{width:44px;height:44px;border-radius:10px;object-fit:cover;display:block}
 /* ============ CONFIGURACIÓN ============
    Pegá acá los datos de tu proyecto (Supabase > Project Settings > API).
    Si queda vacío, la tienda corre en MODO DEMO (datos locales, sin Supabase). */
-const CFG={url:'https://cufzvobltudsibruhcrg.supabase.co',key:'sb_publishable_svLLvJKofEjIUiDvq8ef6Q_OTos7HrC',bucket:'velas'};
+const CFG={url:'https://cufzvobltudsibruhcrg.supabase.co',key:'sb_publishable_svLLvJKofEjIUiDvq8ef6Q_OTos7HrC',bucket:'velas',wa:''};
+/* wa = número de WhatsApp de tu jefa con código de país, sin + ni espacios.
+   Argentina: 549 + código de área sin 0 + número sin 15. Ej: '5493364123456'. Si queda vacío, WhatsApp deja elegir el contacto. */
 const demo=!CFG.url;
 const sb=demo?null:supabase.createClient(CFG.url,CFG.key);
 
@@ -359,10 +362,22 @@ function renderCart(){
   $('#total').textContent=money(t);
 }
 function cq(id,d){const c=S.cart.find(i=>i.id==id),p=S.products.find(x=>x.id==id);c.qty+=d;if(c.qty>p.available)c.qty=p.available;if(c.qty<1)S.cart=S.cart.filter(i=>i!=c);saveCart()}
-async function reserve(){
+function buildMsg(){
+  const l=S.cart.map(c=>{const p=S.products.find(x=>x.id==c.id);return `• ${c.qty} × ${p.name} (${money(p.price*c.qty)})`});
+  const t=S.cart.reduce((a,c)=>a+S.products.find(x=>x.id==c.id).price*c.qty,0);
+  return `Hola! 🌸 Quiero reservar estas velas de Pétalo:\n\n${l.join('\n')}\n\nTotal: ${money(t)}\nMi mail: ${S.user.email}\n\n¿Coordinamos el pago?`;
+}
+async function reserve(kind){
   if(!S.cart.length)return toast('El carrito está vacío');
   if(!S.user){toggleCart(false);return auth()}
-  await run(async()=>{await api.order(S.cart);S.cart=[];saveCart();toggleCart(false);await load();toast('Reserva creada. Tus velas quedan apartadas hasta confirmar el pago.')});
+  const w=kind=='wa'?window.open('about:blank','_blank'):null;
+  try{
+    const msg=buildMsg();
+    await api.order(S.cart);
+    S.cart=[];saveCart();toggleCart(false);await load();
+    if(kind=='wa'){const u='https://wa.me/'+CFG.wa+'?text='+encodeURIComponent(msg);w?w.location.href=u:location.href=u;toast('Reserva creada. Enviá el mensaje por WhatsApp.')}
+    else{try{await navigator.clipboard.writeText(msg);toast('Reserva creada. Mensaje copiado: pegalo en WhatsApp.')}catch(e){prompt('Copiá este mensaje y enviámelo por WhatsApp:',msg)}}
+  }catch(e){w&&w.close();toast(e.message||'Ocurrió un error')}
 }
 
 /* ============ PANEL ADMIN ============ */
