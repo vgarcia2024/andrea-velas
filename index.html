@@ -128,6 +128,16 @@ td img{width:44px;height:44px;border-radius:10px;object-fit:cover;display:block}
 .tabs{display:flex;gap:22px;margin:34px 0 18px;font-size:18px}
 .tabs button{border:0;background:none;border-bottom:2px solid transparent;padding:4px 0;color:var(--mute)}
 .tabs .on{color:var(--ink);border-color:var(--rose)}
+.ord{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:28px;margin-bottom:20px;max-width:760px;display:flex;flex-direction:column;gap:12px}
+.ord.pending{border-color:var(--rose)}.ord.paid{border-color:var(--sage)}
+.ord h3{font-size:28px;display:flex;align-items:center;gap:10px}
+.ord ul{list-style:none;padding:0;border-block:1px solid var(--line);padding-block:12px}
+.ord li{display:flex;justify-content:space-between;padding:3px 0}
+.oh{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.track{display:flex;gap:8px;font-size:14px}.track span{background:var(--blush2);color:var(--mute);border-radius:99px;padding:4px 14px}.track .on{background:var(--rose-d);color:#fff}.ord.paid .track .on{background:var(--sage-d)}
+.pulse{width:12px;height:12px;border-radius:50%;background:var(--rose);animation:pl 1.6s infinite}
+@keyframes pl{0%{box-shadow:0 0 0 0 #c4818e88}100%{box-shadow:0 0 0 14px #c4818e00}}
+.acts2{display:flex;gap:10px;flex-wrap:wrap}
 @media(max-width:860px){.hero,.modal,.panel,.story{grid-template-columns:1fr}.story{gap:40px}header{grid-template-columns:auto 1fr;padding:10px 4vw}header nav{display:none}.logo{align-items:flex-start}form.f{position:static}.hero .arch{order:-1;width:min(260px,70%)}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -149,6 +159,7 @@ td img{width:44px;height:44px;border-radius:10px;object-fit:cover;display:block}
   <a class="logo" href="#" onclick="go('shop');return false"><svg><use href="#flor"/></svg>Pétalo<small>VELAS ARTESANALES</small></a>
   <div class="acts">
     <button class="link hidden" id="navAdmin" onclick="go('admin')">Panel</button>
+    <button class="link hidden" id="navOrders" onclick="go('orders')">Mis pedidos</button>
     <button class="link" onclick="toggleCart(true)">Carrito<span class="badge" id="cnt">0</span></button>
     <button class="btn sm" id="authBtn" onclick="auth()">Ingresar con Google</button>
   </div>
@@ -244,6 +255,10 @@ td img{width:44px;height:44px;border-radius:10px;object-fit:cover;display:block}
  </section>
 </div>
 
+<div id="orders" class="hidden"><section class="wrap" style="min-height:65vh">
+  <div class="head"><div><h2>Mis pedidos</h2><p>Seguí el estado de tus reservas. Se actualiza solo.</p></div><button class="btn" onclick="go('shop')">Seguir comprando</button></div>
+  <div id="oList"></div></section></div>
+
 <div class="overlay hidden" id="ov" onclick="if(event.target===this)closeModal()"><div class="modal" id="modal"></div></div>
 
 <aside class="cart" id="cart">
@@ -287,8 +302,9 @@ const api=demo?{
   async del(id){W('dv_p',L('dv_p',seed).filter(p=>p.id!=id))},
   async order(items){const ps=await this.products(),o=L('dv_o',[]);
     items.forEach(i=>{if(ps.find(p=>p.id==i.id).available<i.qty)throw Error('Stock insuficiente')});
-    o.push({id:String(Date.now()),status:'pending',created_at:new Date().toISOString(),profiles:{email:S.user.email},order_items:items.map(i=>({product_id:i.id,qty:i.qty,products:{name:ps.find(p=>p.id==i.id).name}}))});W('dv_o',o)},
+    o.push({id:String(Date.now()),status:'pending',created_at:new Date().toISOString(),profiles:{email:S.user.email},order_items:items.map(i=>({product_id:i.id,qty:i.qty,products:{name:ps.find(p=>p.id==i.id).name,price:ps.find(p=>p.id==i.id).price}}))});W('dv_o',o)},
   async orders(){return L('dv_o',[]).reverse()},
+  async myOrders(){return L('dv_o',[]).filter(o=>o.profiles.email==S.user.email).reverse()},
   async setOrder(id,st){const o=L('dv_o',[]),x=o.find(v=>v.id==id);
     if(st=='paid'){const p=L('dv_p',seed);x.order_items.forEach(i=>p.find(q=>q.id==i.product_id).stock-=i.qty);W('dv_p',p)}
     x.status=st;W('dv_o',o)}
@@ -306,6 +322,7 @@ const api=demo?{
   async del(id){const r=await sb.from('products').delete().eq('id',id);if(r.error)throw r.error},
   async order(items){const r=await sb.rpc('create_order',{items:items.map(i=>({product_id:i.id,qty:i.qty}))});if(r.error)throw r.error},
   async orders(){const{data,error}=await sb.from('orders').select('id,status,created_at,profiles(email),order_items(qty,product_id,products(name))').order('created_at',{ascending:false});if(error)throw error;return data},
+  async myOrders(){const{data,error}=await sb.from('orders').select('id,status,created_at,order_items(qty,product_id,products(name,price))').eq('user_id',S.user.id).order('created_at',{ascending:false});if(error)throw error;return data},
   async setOrder(id,st){const r=await sb.rpc(st=='paid'?'confirm_order':'cancel_order',{oid:id});if(r.error)throw r.error}
 };
 
@@ -321,11 +338,11 @@ async function init(){
 }
 function drawAuth(){
   $('#authBtn').textContent=S.user?'Salir':'Ingresar con Google';
-  $('#navAdmin').classList.toggle('hidden',!S.admin);
+  $('#navAdmin').classList.toggle('hidden',!S.admin);$('#navOrders').classList.toggle('hidden',!S.user);if(!S.user&&S.view=='orders')go('shop');
   if(!S.admin&&S.view=='admin')go('shop');
 }
 async function auth(){await run(async()=>{if(S.user){await api.logout();S.user=null;S.admin=false;drawAuth();renderGrid()}else{await api.login();if(demo)init()}})}
-function go(v){S.view=v;$('#shop').classList.toggle('hidden',v!='shop');$('#admin').classList.toggle('hidden',v!='admin');scrollTo(0,0);if(v=='admin')loadAdmin()}
+function go(v){S.view=v;$('#shop').classList.toggle('hidden',v!='shop');$('#admin').classList.toggle('hidden',v!='admin');$('#orders').classList.toggle('hidden',v!='orders');if(v=='orders')loadOrders();scrollTo(0,0);if(v=='admin')loadAdmin()}
 async function load(){await run(async()=>{S.products=await api.products();renderGrid();renderCart()})}
 
 function ph(p){return p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.name)}">`:'<svg><use href="#flor"/></svg>'}
@@ -375,10 +392,42 @@ async function reserve(kind){
     const msg=buildMsg();
     await api.order(S.cart);
     S.cart=[];saveCart();toggleCart(false);await load();
-    if(kind=='wa'){const u='https://wa.me/'+CFG.wa+'?text='+encodeURIComponent(msg);w?w.location.href=u:location.href=u;toast('Reserva creada. Enviá el mensaje por WhatsApp.')}
-    else{try{await navigator.clipboard.writeText(msg);toast('Reserva creada. Mensaje copiado: pegalo en WhatsApp.')}catch(e){prompt('Copiá este mensaje y enviámelo por WhatsApp:',msg)}}
+    if(kind=='wa'){const u='https://wa.me/'+CFG.wa+'?text='+encodeURIComponent(msg);w?w.location.href=u:window.open(u,'_blank')}
+    else{try{await navigator.clipboard.writeText(msg);toast('Mensaje copiado: pegalo en WhatsApp')}catch(e){prompt('Copiá este mensaje y enviámelo por WhatsApp:',msg)}}
+    go('orders');
   }catch(e){w&&w.close();toast(e.message||'Ocurrió un error')}
 }
+
+/* ============ MIS PEDIDOS ============ */
+const ST={pending:['Reserva pendiente de pago','Tus velas están apartadas para vos. Coordiná el pago por WhatsApp. Cuando lo confirmemos, esta pantalla se actualiza sola.'],paid:['Pago confirmado','¡Gracias por tu compra! Coordinemos la entrega por WhatsApp.'],cancelled:['Reserva cancelada','Las velas volvieron al stock. Si querés, podés hacer una nueva reserva.']};
+S.orders=[];
+function orderMsg(o){
+  const t=o.order_items.reduce((a,i)=>a+i.qty*(i.products?.price||0),0);
+  return `Hola! 🌸 Te escribo por mi reserva de Pétalo:\n\n${o.order_items.map(i=>`• ${i.qty} × ${i.products?.name}`).join('\n')}\n${t?`\nTotal: ${money(t)}`:''}\nMi mail: ${S.user.email}\n\n¿Coordinamos el pago?`;
+}
+async function sendOrder(id,kind){
+  const m=orderMsg(S.orders.find(o=>o.id==id));
+  if(kind=='wa')return window.open('https://wa.me/'+CFG.wa+'?text='+encodeURIComponent(m),'_blank');
+  try{await navigator.clipboard.writeText(m);toast('Mensaje copiado: pegalo en WhatsApp')}catch(e){prompt('Copiá este mensaje:',m)}
+}
+async function loadOrders(){
+  if(!S.user)return;
+  try{
+    const ord=await api.myOrders();
+    ord.forEach(o=>{const a=S.orders.find(x=>x.id==o.id);if(a&&a.status=='pending'&&o.status=='paid')toast('¡Tu pago fue confirmado! 🌸')});
+    S.orders=ord;
+    $('#oList').innerHTML=ord.length?ord.map(o=>{const st=ST[o.status],t=o.order_items.reduce((a,i)=>a+i.qty*(i.products?.price||0),0);
+      return `<div class="ord ${o.status}"><div class="oh"><span class="pill">Pedido ${String(o.id).slice(-5)}</span><span class="note">${new Date(o.created_at).toLocaleString('es-AR')}</span></div>
+      <h3>${o.status=='pending'?'<span class="pulse"></span>':''}${st[0]}</h3>
+      ${o.status!='cancelled'?`<div class="track"><span class="on">Reservado</span><span class="${o.status=='paid'?'on':''}">Pago confirmado</span></div>`:''}
+      <p class="note">${st[1]}</p>
+      <ul>${o.order_items.map(i=>`<li><span>${i.qty} × ${esc(i.products?.name)}</span><span>${i.products?.price?money(i.qty*i.products.price):''}</span></li>`).join('')}</ul>
+      ${t?`<div class="tot"><span>Total</span><b>${money(t)}</b></div>`:''}
+      ${o.status=='pending'?`<div class="acts2"><button class="btn fill sm" onclick="sendOrder('${o.id}','wa')">Enviar por WhatsApp</button><button class="btn sm" onclick="sendOrder('${o.id}','copy')">Copiar mensaje</button></div>`:''}</div>`}).join(''):'<p class="note">Todavía no hiciste ninguna reserva.</p>';
+  }catch(e){}
+}
+setInterval(()=>{if(S.view=='orders')loadOrders()},10000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.view=='orders')loadOrders()});
 
 /* ============ PANEL ADMIN ============ */
 function tab(t){$('#pS').classList.toggle('hidden',t!='S');$('#pO').classList.toggle('hidden',t!='O');$('#tS').classList.toggle('on',t=='S');$('#tO').classList.toggle('on',t=='O')}
